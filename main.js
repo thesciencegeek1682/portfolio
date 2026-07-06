@@ -1,0 +1,239 @@
+/* Nathan Joseph portfolio — interactive strings, spotlight, scroll reveals. */
+(function () {
+  "use strict";
+
+  var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- Scroll reveals ---------- */
+  var revealed = document.querySelectorAll(".reveal");
+  if ("IntersectionObserver" in window && !reducedMotion) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          e.target.classList.add("visible");
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    revealed.forEach(function (el) { io.observe(el); });
+  } else {
+    revealed.forEach(function (el) { el.classList.add("visible"); });
+  }
+
+  /* ---------- Spotlight follows cursor ---------- */
+  var spot = document.querySelector(".spotlight");
+  if (spot && !reducedMotion) {
+    var sx = window.innerWidth / 2, sy = window.innerHeight * 0.3;
+    var tx = sx, ty = sy, spotRaf = null;
+    function spotStep() {
+      sx += (tx - sx) * 0.12;
+      sy += (ty - sy) * 0.12;
+      spot.style.setProperty("--mx", sx + "px");
+      spot.style.setProperty("--my", sy + "px");
+      if (Math.abs(tx - sx) + Math.abs(ty - sy) > 0.5) {
+        spotRaf = requestAnimationFrame(spotStep);
+      } else {
+        spotRaf = null;
+      }
+    }
+    window.addEventListener("pointermove", function (e) {
+      tx = e.clientX; ty = e.clientY;
+      if (!spotRaf) spotRaf = requestAnimationFrame(spotStep);
+    }, { passive: true });
+  }
+
+  /* ---------- Interactive strings (hero) ---------- */
+  var canvas = document.getElementById("strings");
+  if (!canvas) return;
+  var ctx = canvas.getContext("2d");
+  var hero = canvas.parentElement;
+
+  var STRING_COUNT = 11;
+  var POINTS = 90;          // samples per string
+  var SPRING = 0.045;       // pull back to rest
+  var COUPLING = 0.28;      // neighbor pull (wave propagation)
+  var DAMPING = 0.972;
+  var MOUSE_RADIUS = 70;    // px influence around cursor
+  var MOUSE_PUSH = 1.9;
+
+  // Gradient stops matching the site accents.
+  var COLORS = [
+    [78, 224, 193],   // teal
+    [123, 92, 255],   // violet
+    [255, 92, 158]    // magenta
+  ];
+
+  var W = 0, H = 0, dpr = 1;
+  var strings = [];
+  var lastMouse = null;
+  var running = false;
+  var heroVisible = true;
+
+  function lerpColor(t) {
+    var seg = t < 0.5 ? 0 : 1;
+    var lt = (t - seg * 0.5) / 0.5;
+    var a = COLORS[seg], b = COLORS[seg + 1];
+    return [
+      Math.round(a[0] + (b[0] - a[0]) * lt),
+      Math.round(a[1] + (b[1] - a[1]) * lt),
+      Math.round(a[2] + (b[2] - a[2]) * lt)
+    ];
+  }
+
+  function build() {
+    var rect = hero.getBoundingClientRect();
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = rect.width; H = rect.height;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    strings = [];
+    // Strings occupy the vertical band of the hero, denser toward the middle.
+    var top = H * 0.16, bottom = H * 0.9;
+    for (var i = 0; i < STRING_COUNT; i++) {
+      var t = i / (STRING_COUNT - 1);
+      var col = lerpColor(t);
+      strings.push({
+        y: top + (bottom - top) * t,
+        color: col,
+        off: new Float32Array(POINTS),
+        vel: new Float32Array(POINTS)
+      });
+    }
+  }
+
+  function pluck(s, idx, force) {
+    var i0 = Math.max(1, idx - 2), i1 = Math.min(POINTS - 2, idx + 2);
+    for (var i = i0; i <= i1; i++) {
+      s.vel[i] += force * (1 - Math.abs(i - idx) / 3);
+    }
+  }
+
+  // Occasional autonomous pluck so the hero is alive even without a cursor.
+  var autoTimer = setInterval(function () {
+    if (!strings.length || document.hidden || !heroVisible) return;
+    var s = strings[Math.floor(Math.random() * strings.length)];
+    pluck(s, 6 + Math.floor(Math.random() * (POINTS - 12)), (Math.random() - 0.5) * 26);
+    wake();
+  }, 2600);
+
+  function step(now) {
+    var t = (now || 0) * 0.001;
+    ctx.clearRect(0, 0, W, H);
+    ctx.globalCompositeOperation = "lighter";
+    var energy = 0;
+
+    for (var si = 0; si < strings.length; si++) {
+      var s = strings[si];
+      var off = s.off, vel = s.vel;
+
+      for (var i = 1; i < POINTS - 1; i++) {
+        var force = -off[i] * SPRING
+          + (off[i - 1] + off[i + 1] - 2 * off[i]) * COUPLING;
+        vel[i] = (vel[i] + force) * DAMPING;
+      }
+      for (i = 1; i < POINTS - 1; i++) {
+        off[i] += vel[i];
+        var a = Math.abs(vel[i]);
+        if (a > energy) energy = a;
+      }
+
+      // Ambient traveling wave (draw-time only, keeps the hero alive at rest).
+      var phase = si * 0.9;
+      var ambAmp = 2.6 + Math.sin(si * 1.7) * 0.8;
+
+      // Draw
+      var c = s.color;
+      var amp = 0;
+      for (i = 0; i < POINTS; i++) { var aa = Math.abs(off[i]); if (aa > amp) amp = aa; }
+      var alpha = 0.18 + Math.min(amp / 26, 1) * 0.55;
+
+      var stepX = W / (POINTS - 1);
+      function yAt(i) {
+        return s.y + off[i]
+          + Math.sin(i * 0.11 + t * 0.9 + phase) * ambAmp
+          + Math.sin(i * 0.031 - t * 0.45 + phase * 2.1) * ambAmp * 0.7;
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(0, yAt(0));
+      for (i = 1; i < POINTS - 1; i++) {
+        var xc = (i * stepX + (i + 1) * stepX) / 2;
+        var yc = (yAt(i) + yAt(i + 1)) / 2;
+        ctx.quadraticCurveTo(i * stepX, yAt(i), xc, yc);
+      }
+      ctx.lineTo(W, yAt(POINTS - 1));
+      ctx.strokeStyle = "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + alpha.toFixed(3) + ")";
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+    }
+
+    ctx.globalCompositeOperation = "source-over";
+
+    if (!document.hidden && heroVisible) {
+      requestAnimationFrame(step);
+    } else {
+      running = false;
+    }
+  }
+
+  function wake() {
+    if (!running) {
+      running = true;
+      requestAnimationFrame(step);
+    }
+  }
+
+  function onMove(e) {
+    var rect = canvas.getBoundingClientRect();
+    var mx = e.clientX - rect.left;
+    var my = e.clientY - rect.top;
+    if (my < -40 || my > rect.height + 40) { lastMouse = null; return; }
+
+    var stepX = W / (POINTS - 1);
+    for (var si = 0; si < strings.length; si++) {
+      var s = strings[si];
+      var dy = my - s.y;
+      if (Math.abs(dy) < MOUSE_RADIUS) {
+        var strength = (1 - Math.abs(dy) / MOUSE_RADIUS) * MOUSE_PUSH;
+        var idx = Math.round(mx / stepX);
+        if (idx > 0 && idx < POINTS - 1) {
+          // Push in the direction the cursor travels vertically.
+          var dir = lastMouse ? (my - lastMouse.y) : 0;
+          var f = dir !== 0 ? Math.max(-1, Math.min(1, dir)) * strength * 8
+                            : strength * 5;
+          pluck(s, idx, f);
+        }
+      }
+    }
+    lastMouse = { x: mx, y: my };
+    wake();
+  }
+
+  if (!reducedMotion) {
+    build();
+    // Kick off with a gentle opening chord.
+    strings.forEach(function (s, i) {
+      setTimeout(function () {
+        pluck(s, Math.floor(POINTS * (0.25 + Math.random() * 0.5)), 18);
+        wake();
+      }, 180 * i);
+    });
+
+    window.addEventListener("resize", function () { build(); wake(); }, { passive: true });
+    hero.addEventListener("pointermove", onMove, { passive: true });
+
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (entries) {
+        heroVisible = entries[0].isIntersecting;
+        if (heroVisible) wake();
+      }).observe(hero);
+    }
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) wake();
+    });
+  } else {
+    clearInterval(autoTimer);
+  }
+})();
