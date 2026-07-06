@@ -113,45 +113,101 @@
     return true;
   }
 
+  var VEL_CAP = 0.55; // hard strums plateau here instead of getting harsh
+
   function playNote(si, vel) {
     if (!audioEnabled || !actx || si < 0 || si >= noteBuffers.length) return;
     var now = performance.now();
     if (now - noteLastPlayed[si] < NOTE_COOLDOWN_MS) return;
     noteLastPlayed[si] = now;
+    vel = Math.min(Math.max(vel, 0), VEL_CAP);
     var src = actx.createBufferSource();
     src.buffer = noteBuffers[si];
     src.playbackRate.value = 1 + (Math.random() - 0.5) * 0.004; // organic micro-detune
+    var filt = actx.createBiquadFilter();
+    filt.type = "lowpass";
+    filt.frequency.value = 950 + vel * 2600; // harder strum = fuller, never shrill
+    filt.Q.value = 0.4;
     var g = actx.createGain();
-    g.gain.value = 0.08 + Math.min(Math.max(vel, 0), 1) * 0.55;
-    src.connect(g);
+    g.gain.value = 0.07 + vel * 0.5;
+    src.connect(filt);
+    filt.connect(g);
     g.connect(masterOut);
     src.start();
-    src.onended = function () { src.disconnect(); g.disconnect(); };
+    src.onended = function () { src.disconnect(); filt.disconnect(); g.disconnect(); };
   }
 
   var soundBtn = document.getElementById("soundToggle");
+
+  function syncToggleUI() {
+    if (!soundBtn) return;
+    soundBtn.classList.toggle("on", audioEnabled);
+    soundBtn.setAttribute("aria-pressed", String(audioEnabled));
+    soundBtn.innerHTML = audioEnabled ? "&#9834; Sound on" : "&#9834; Strum with sound";
+  }
+
+  function enableAudio() {
+    if (!actx && !initAudio()) return false;
+    if (actx.state === "suspended") actx.resume();
+    audioEnabled = true;
+    syncToggleUI();
+    return true;
+  }
+
+  function playArpeggio() {
+    // A soft opening arpeggio, with matching visual plucks.
+    [10, 7, 5, 3, 0].forEach(function (si, k) {
+      setTimeout(function () {
+        playNote(si, 0.35);
+        if (strings[si]) { pluck(strings[si], Math.floor(POINTS * 0.5), 16); wake(); }
+      }, 110 * k);
+    });
+  }
+
   if (soundBtn) {
     if (reducedMotion) {
       soundBtn.style.display = "none";
     } else {
       soundBtn.addEventListener("click", function () {
-        if (!actx && !initAudio()) { soundBtn.style.display = "none"; return; }
-        if (actx.state === "suspended") actx.resume();
-        audioEnabled = !audioEnabled;
-        soundBtn.classList.toggle("on", audioEnabled);
-        soundBtn.setAttribute("aria-pressed", String(audioEnabled));
-        soundBtn.innerHTML = audioEnabled ? "&#9834; Sound on" : "&#9834; Strum with sound";
         if (audioEnabled) {
-          // A soft opening arpeggio, and matching visual plucks.
-          [10, 7, 5, 3, 0].forEach(function (si, k) {
-            setTimeout(function () {
-              playNote(si, 0.35);
-              if (strings[si]) { pluck(strings[si], Math.floor(POINTS * 0.5), 16); wake(); }
-            }, 110 * k);
-          });
+          audioEnabled = false;
+          syncToggleUI();
+        } else if (enableAudio()) {
+          playArpeggio();
+        } else {
+          soundBtn.style.display = "none";
         }
       });
     }
+  }
+
+  /* ---------- Curtain (enter screen) ---------- */
+  var curtain = document.getElementById("curtain");
+  var enterSoundBtn = document.getElementById("enterSound");
+  var enterQuietBtn = document.getElementById("enterQuiet");
+
+  function liftCurtain() {
+    if (!curtain) return;
+    curtain.classList.add("lift");
+    document.body.classList.remove("no-scroll");
+    setTimeout(function () {
+      if (curtain.parentNode) curtain.parentNode.removeChild(curtain);
+    }, 1000);
+  }
+
+  if (curtain && enterSoundBtn && enterQuietBtn) {
+    if (reducedMotion || !(window.AudioContext || window.webkitAudioContext)) {
+      // No strings to strum (or no audio support): a single plain Enter.
+      enterSoundBtn.style.display = "none";
+      enterQuietBtn.textContent = "Enter";
+      enterQuietBtn.className = "curtain-enter";
+    }
+    enterSoundBtn.addEventListener("click", function () {
+      enableAudio();
+      liftCurtain();
+      setTimeout(playArpeggio, 450);
+    });
+    enterQuietBtn.addEventListener("click", liftCurtain);
   }
 
   function lerpColor(t) {

@@ -14,9 +14,19 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300;1,9..144,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=2">
+  <link rel="stylesheet" href="styles.css?v=3">
 </head>
-<body>
+<body class="no-scroll">
+
+  <noscript><style>.curtain { display: none; } body.no-scroll { overflow: auto; }</style></noscript>
+  <div class="curtain" id="curtain">
+    <div class="curtain-inner">
+      <p class="curtain-kicker">Nathan Joseph &middot; Game Technical Artist</p>
+      <h2 class="curtain-title">The stage is set.</h2>
+      <button class="curtain-enter" id="enterSound">&#9834; Enter with sound</button>
+      <button class="curtain-quiet" id="enterQuiet">enter quietly</button>
+    </div>
+  </div>
 
   <div class="spotlight" aria-hidden="true"></div>
 
@@ -257,6 +267,6 @@
     <p class="footer-fine">Nathan Joseph — Game Technical Artist</p>
   </footer>
 
-  <script src="main.js?v=2"></script>
+  <script src="main.js?v=3"></script>
 </body>
 </html>

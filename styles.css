@@ -35,6 +35,77 @@ h1, h2, h3 { font-family: "Fraunces", Georgia, serif; font-weight: 400; }
   font-style: italic;
 }
 
+/* ============ Curtain (enter screen) ============ */
+body.no-scroll { overflow: hidden; }
+
+.curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(60rem circle at 50% 42%, #0e0d18, var(--bg) 72%);
+  transition: opacity 0.9s ease;
+}
+
+.curtain.lift { opacity: 0; pointer-events: none; }
+
+.curtain-inner { text-align: center; padding: 2rem; }
+
+.curtain-kicker {
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  font-size: 0.78rem;
+  margin-bottom: 1.4rem;
+}
+
+.curtain-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(2rem, 6vw, 3.6rem);
+  margin-bottom: 2.4rem;
+}
+
+.curtain-enter {
+  padding: 0.85rem 2.1rem;
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 0.88rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: 99px;
+  background:
+    linear-gradient(rgba(16, 16, 26, 0.88), rgba(16, 16, 26, 0.88)) padding-box,
+    var(--gradient) border-box;
+  box-shadow: 0 0 30px rgba(123, 92, 255, 0.22);
+  transition: box-shadow 0.25s, transform 0.25s;
+}
+
+.curtain-enter:hover {
+  box-shadow: 0 0 44px rgba(78, 224, 193, 0.3);
+  transform: translateY(-1px);
+}
+
+.curtain-quiet {
+  display: block;
+  margin: 1.4rem auto 0;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 4px;
+}
+
+.curtain-quiet:hover { color: var(--text); }
+
 /* ============ Spotlight (follows cursor) ============ */
 .spotlight {
   position: fixed;
