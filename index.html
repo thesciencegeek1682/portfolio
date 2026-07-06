@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300;1,9..144,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=3">
+  <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body class="no-scroll">
 
@@ -111,13 +111,26 @@
       <p class="act-kicker">Act II &mdash; The Music</p>
       <h2 class="act-title">Design for the stage</h2>
       <p class="act-lead">
-        Poster and ticket design for a live concert — the scene modelled and rendered in Houdini,
-        then finished as print design in Inkscape.
+        Poster and ticket for <strong>A Song of Hope</strong>, a live choir concert. The candle and
+        paper figures aren't a photograph — the scene was modelled and rendered in Houdini, then
+        finished as print design in Inkscape.
       </p>
-      <!-- PLACEHOLDER: replace with <img class="feature-img" src="assets/concert-poster.jpg" alt="Concert poster and ticket design, rendered in Houdini"> -->
-      <div class="placeholder wide">
-        <span>Concert poster &amp; ticket — image coming</span>
+      <div class="poster-grid">
+        <figure class="work-item">
+          <img class="feature-img" src="assets/poster.jpg" alt="A Song of Hope concert poster — a candle surrounded by paper figures holding hands under a starry sky">
+          <figcaption>Concert poster</figcaption>
+        </figure>
+        <div class="poster-side">
+          <figure class="work-item">
+            <img class="feature-img" src="assets/ticket.jpg" alt="A Song of Hope concert ticket">
+            <figcaption>Ticket</figcaption>
+          </figure>
+        </div>
       </div>
+      <figure class="work-item process-strip">
+        <img class="feature-img" src="assets/poster-houdini.jpg" alt="Houdini viewport showing the wireframe of the candle and paper figure scene">
+        <figcaption>Behind the poster — the scene as wireframes in Houdini</figcaption>
+      </figure>
       <div class="in-dev">
         <span class="in-dev-badge">In development</span>
         <p>
@@ -134,16 +147,36 @@
       <p class="act-kicker">Act III &mdash; The Craft</p>
       <h2 class="act-title">Sculpting in 3D</h2>
       <p class="act-lead">
-        Procedural modelling in Houdini — geometry built from rules, so one idea can become a hundred variations.
+        Props modelled by hand, and geometry built from rules — where one idea can become a
+        hundred variations.
       </p>
-      <div class="grid-2">
-        <!-- PLACEHOLDER: game prop render/turntable + wireframe -->
-        <div class="placeholder">
-          <span>Game prop — render &amp; wireframe coming</span>
+
+      <div class="sub-block">
+        <h3 class="sub-title">Gramophone</h3>
+        <p class="act-lead">A game prop, modelled and textured. The wireframe shows the build underneath.</p>
+        <div class="grid-2">
+          <figure class="work-item">
+            <img class="feature-img" src="assets/gramophone.jpg" alt="Textured gramophone render with ornate brass horn on a wooden base, in dramatic stage lighting">
+            <figcaption>Textured render</figcaption>
+          </figure>
+          <figure class="work-item">
+            <img class="feature-img" src="assets/gramophone-wire.jpg" alt="Gramophone wireframe">
+            <figcaption>Wireframe</figcaption>
+          </figure>
         </div>
-        <!-- PLACEHOLDER: shampoo bottle render -->
-        <div class="placeholder">
-          <span>Procedural shampoo bottle — render coming</span>
+      </div>
+
+      <div class="sub-block">
+        <h3 class="sub-title">Procedural bridge</h3>
+        <p class="act-lead">
+          Built in Houdini as a recipe rather than a model — change the parameters and the whole
+          bridge rebuilds itself.
+        </p>
+        <div class="video-frame">
+          <iframe src="https://www.youtube-nocookie.com/embed/IuJaZgMxEYg?rel=0"
+                  title="Procedural bridge built in Houdini"
+                  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowfullscreen loading="lazy"></iframe>
         </div>
       </div>
     </section>
@@ -267,6 +300,6 @@
     <p class="footer-fine">Nathan Joseph — Game Technical Artist</p>
   </footer>
 
-  <script src="main.js?v=3"></script>
+  <script src="main.js?v=4"></script>
 </body>
 </html>

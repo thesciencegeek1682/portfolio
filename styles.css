@@ -376,6 +376,20 @@ main { position: relative; z-index: 2; }
   display: block;
 }
 
+.poster-grid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 1.6rem;
+  align-items: start;
+  max-width: 52rem;
+}
+
+@media (max-width: 40rem) {
+  .poster-grid { grid-template-columns: 1fr; }
+}
+
+.process-strip { margin-top: 1.6rem; max-width: 52rem; }
+
 .grid-2 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
