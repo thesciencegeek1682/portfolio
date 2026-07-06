@@ -42,6 +42,30 @@
     }, { passive: true });
   }
 
+  /* ---------- Lightbox: click a work image to view it fit to screen ---------- */
+  (function () {
+    var imgs = document.querySelectorAll(".feature-img");
+    if (!imgs.length) return;
+    var lb = document.createElement("div");
+    lb.className = "lightbox";
+    lb.setAttribute("role", "dialog");
+    lb.setAttribute("aria-modal", "true");
+    lb.setAttribute("aria-label", "Enlarged image, click or press Escape to close");
+    var lbImg = document.createElement("img");
+    lb.appendChild(lbImg);
+    document.body.appendChild(lb);
+    function close() { lb.classList.remove("open"); }
+    lb.addEventListener("click", close);
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+    imgs.forEach(function (img) {
+      img.addEventListener("click", function () {
+        lbImg.src = img.src;
+        lbImg.alt = img.alt;
+        lb.classList.add("open");
+      });
+    });
+  })();
+
   /* ---------- Interactive strings (hero) ---------- */
   var canvas = document.getElementById("strings");
   if (!canvas) return;

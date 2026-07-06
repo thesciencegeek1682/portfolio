@@ -396,11 +396,38 @@ main { position: relative; z-index: 2; }
   gap: 1.6rem;
 }
 
-.grid-3 {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
-  gap: 1.4rem;
-  align-items: start;
+.gram-hero { max-width: 52rem; }
+
+.gram-under {
+  max-width: 52rem;
+  margin-top: 1.6rem;
+}
+
+/* ============ Lightbox ============ */
+.feature-img { cursor: zoom-in; }
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 5, 9, 0.93);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  cursor: zoom-out;
+}
+
+.lightbox.open { opacity: 1; pointer-events: auto; }
+
+.lightbox img {
+  max-width: 93vw;
+  max-height: 93vh;
+  border-radius: 8px;
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.6);
 }
 
 .work-item figcaption {
