@@ -69,6 +69,91 @@
   var running = false;
   var heroVisible = true;
 
+  /* ---------- Sound: Karplus-Strong plucked strings ---------- */
+  // C major pentatonic, two octaves. Index matches string index (top string = highest note).
+  var NOTES = [1046.50, 880.00, 783.99, 659.26, 587.33, 523.25, 440.00, 392.00, 329.63, 293.66, 261.63];
+  var audioEnabled = false;
+  var actx = null, masterOut = null;
+  var noteBuffers = [];
+  var noteLastPlayed = new Float64Array(NOTES.length);
+  var NOTE_COOLDOWN_MS = 90;
+
+  function makePluckBuffer(freq) {
+    var sr = actx.sampleRate;
+    var dur = 2.2;
+    var N = Math.max(2, Math.round(sr / freq));
+    var len = Math.floor(sr * dur);
+    var data = new Float32Array(len);
+    var i;
+    for (i = 0; i < N; i++) data[i] = Math.random() * 2 - 1;
+    for (i = 1; i < N; i++) data[i] = (data[i] + data[i - 1]) * 0.5; // soften the attack
+    for (i = N; i < len; i++) {
+      var a = data[i - N];
+      var b = i - N - 1 >= 0 ? data[i - N - 1] : 0;
+      data[i] = (a + b) * 0.5 * 0.998;
+    }
+    for (i = len - 2400; i < len; i++) data[i] *= (len - i) / 2400; // fade tail
+    var buf = actx.createBuffer(1, len, sr);
+    buf.getChannelData(0).set(data);
+    return buf;
+  }
+
+  function initAudio() {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return false;
+    actx = new AC();
+    var comp = actx.createDynamicsCompressor();
+    comp.threshold.value = -18;
+    comp.ratio.value = 6;
+    masterOut = actx.createGain();
+    masterOut.gain.value = 0.55;
+    masterOut.connect(comp);
+    comp.connect(actx.destination);
+    for (var i = 0; i < NOTES.length; i++) noteBuffers.push(makePluckBuffer(NOTES[i]));
+    return true;
+  }
+
+  function playNote(si, vel) {
+    if (!audioEnabled || !actx || si < 0 || si >= noteBuffers.length) return;
+    var now = performance.now();
+    if (now - noteLastPlayed[si] < NOTE_COOLDOWN_MS) return;
+    noteLastPlayed[si] = now;
+    var src = actx.createBufferSource();
+    src.buffer = noteBuffers[si];
+    src.playbackRate.value = 1 + (Math.random() - 0.5) * 0.004; // organic micro-detune
+    var g = actx.createGain();
+    g.gain.value = 0.08 + Math.min(Math.max(vel, 0), 1) * 0.55;
+    src.connect(g);
+    g.connect(masterOut);
+    src.start();
+    src.onended = function () { src.disconnect(); g.disconnect(); };
+  }
+
+  var soundBtn = document.getElementById("soundToggle");
+  if (soundBtn) {
+    if (reducedMotion) {
+      soundBtn.style.display = "none";
+    } else {
+      soundBtn.addEventListener("click", function () {
+        if (!actx && !initAudio()) { soundBtn.style.display = "none"; return; }
+        if (actx.state === "suspended") actx.resume();
+        audioEnabled = !audioEnabled;
+        soundBtn.classList.toggle("on", audioEnabled);
+        soundBtn.setAttribute("aria-pressed", String(audioEnabled));
+        soundBtn.innerHTML = audioEnabled ? "&#9834; Sound on" : "&#9834; Strum with sound";
+        if (audioEnabled) {
+          // A soft opening arpeggio, and matching visual plucks.
+          [10, 7, 5, 3, 0].forEach(function (si, k) {
+            setTimeout(function () {
+              playNote(si, 0.35);
+              if (strings[si]) { pluck(strings[si], Math.floor(POINTS * 0.5), 16); wake(); }
+            }, 110 * k);
+          });
+        }
+      });
+    }
+  }
+
   function lerpColor(t) {
     var seg = t < 0.5 ? 0 : 1;
     var lt = (t - seg * 0.5) / 0.5;
@@ -113,8 +198,9 @@
   // Occasional autonomous pluck so the hero is alive even without a cursor.
   var autoTimer = setInterval(function () {
     if (!strings.length || document.hidden || !heroVisible) return;
-    var s = strings[Math.floor(Math.random() * strings.length)];
-    pluck(s, 6 + Math.floor(Math.random() * (POINTS - 12)), (Math.random() - 0.5) * 26);
+    var si = Math.floor(Math.random() * strings.length);
+    pluck(strings[si], 6 + Math.floor(Math.random() * (POINTS - 12)), (Math.random() - 0.5) * 26);
+    playNote(si, 0.12);
     wake();
   }, 2600);
 
@@ -195,6 +281,16 @@
     for (var si = 0; si < strings.length; si++) {
       var s = strings[si];
       var dy = my - s.y;
+
+      // Strum: the cursor actually crossed this string since the last event.
+      if (lastMouse) {
+        var prevDy = lastMouse.y - s.y;
+        if (prevDy !== 0 && prevDy * dy < 0) {
+          var speed = Math.abs(my - lastMouse.y);
+          playNote(si, speed / 90);
+        }
+      }
+
       if (Math.abs(dy) < MOUSE_RADIUS) {
         var strength = (1 - Math.abs(dy) / MOUSE_RADIUS) * MOUSE_PUSH;
         var idx = Math.round(mx / stepX);
