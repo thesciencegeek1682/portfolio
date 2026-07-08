@@ -273,6 +273,15 @@ body.no-scroll { overflow: hidden; }
 
 .sound-toggle:hover { color: var(--text); border-color: var(--accent-2); }
 
+/* ============ Mobile adjustments ============ */
+@media (max-width: 40rem) {
+  .nav { flex-wrap: wrap; row-gap: 0.3rem; padding-top: 0.7rem; padding-bottom: 0.7rem; }
+  .nav-links { width: 100%; justify-content: space-between; gap: 0.4rem; }
+  .nav-links a { font-size: 0.7rem; letter-spacing: 0.04em; }
+  .scroll-cue { display: none; }
+  .sound-toggle { left: 50%; right: auto; transform: translateX(-50%); white-space: nowrap; }
+}
+
 .sound-toggle.on {
   color: var(--text);
   border-color: transparent;
