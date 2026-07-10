@@ -659,6 +659,12 @@ main { position: relative; z-index: 2; }
   background: var(--gradient);
 }
 
+.cv-photos {
+  max-width: 56rem;
+  margin-top: 2.6rem;
+  align-items: end;
+}
+
 /* ============ Reveal on scroll ============ */
 .reveal {
   opacity: 0;
