@@ -554,6 +554,55 @@ main { position: relative; z-index: 2; }
   .statement-body { grid-template-columns: 1fr; }
 }
 
+/* ============ Recommendations ============ */
+.rec { max-width: 46rem; }
+
+.rec-quote {
+  position: relative;
+  padding-left: 1.6rem;
+  border-left: 2px solid transparent;
+  border-image: linear-gradient(to bottom, #4ee0c1, #7b5cff, #ff5c9e) 1;
+}
+
+.rec-quote p {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 1.12rem;
+  line-height: 1.75;
+  color: var(--text);
+}
+
+.rec-attrib {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-top: 1.1rem;
+  padding-left: 1.6rem;
+}
+
+.rec-name {
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.rec-title {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  max-width: 34rem;
+}
+
+.rec-letter-link {
+  display: inline-block;
+  margin-top: 0.9rem;
+  margin-left: 1.6rem;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  text-decoration: underline dotted;
+  text-underline-offset: 4px;
+}
+
+.rec-letter-link:hover { color: var(--text); }
+
 /* ============ CV ============ */
 .cv-grid {
   display: grid;
