@@ -405,6 +405,13 @@ main { position: relative; z-index: 2; }
   gap: 1.6rem;
 }
 
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 1.4rem;
+  align-items: end;
+}
+
 .gram-hero { max-width: 52rem; }
 
 .gram-under {
