@@ -557,6 +557,8 @@ main { position: relative; z-index: 2; }
 /* ============ Recommendations ============ */
 .rec { max-width: 46rem; }
 
+.rec + .rec { margin-top: 2.6rem; }
+
 .rec-quote {
   position: relative;
   padding-left: 1.6rem;
